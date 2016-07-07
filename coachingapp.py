@@ -29,13 +29,6 @@ def Total_Marks_generate():
 		listconv1=list(chain.from_iterable(data)) 
 		strconv=str(listconv1[0])
 		
- #CONVERT STRING TO LIST NOT TUPLE LIST TO LIST
- #
- #
- #
- #
-		
-
 		if(',' in strconv):
 			Marks_HistoryList=strconv.split(',')
 		else:
@@ -64,7 +57,7 @@ def update_marksheet():
 			print("Please add a student first")
 			quit()
 		elif s_name not in NameList:
-			s_name=input("Enter a valid Student Name : ")
+			s_name=input("This student is not enrolled. Try again : ")
 		else:
 			break
 
@@ -113,20 +106,49 @@ def read_from_db():
 	input("\n\nPRESS ENTER TO CONTINUE :")
 
 def latest_marks(s_name):
-	Marks_HistoryList=marks_list_generate(s_name)
+	c.execute('SELECT Marks_History FROM coaching WHERE Name = ?',s_name)
+	data = c.fetchall()      
+	listconv1=list(chain.from_iterable(data)) 
+	strconv=str(listconv1[0])
+	
+	if(',' in strconv):
+		Marks_HistoryList=strconv.split(',')
+	else:
+		Marks_HistoryList=[strconv]
+
+	if (Marks_HistoryList[0]=='None'):
+		del Marks_HistoryList[0]
+
 	print("Marks : "+ Marks_HistoryList[-1])
+	input("\n\nPRESS ENTER TO CONTINUE :")
+
 
 def studentbatch_view(s_name):
 	c.execute('SELECT Batch FROM coaching WHERE Name = ?',s_name)
 	data = c.fetchall()
-	for row in data:
+	listconv1=list(chain.from_iterable(data)) 
+	for row in listconv1:
 		print(row)
+	input("\n\nPRESS ENTER TO CONTINUE :")
+
 
 def studentperf_view(s_name):
 	c.execute('SELECT Marks_History FROM coaching WHERE Name = ?',s_name)
-	data = c.fetchall()
-	for row in data:
+	data = c.fetchall()      
+	listconv1=list(chain.from_iterable(data)) 
+	strconv=str(listconv1[0])
+	
+	if(',' in strconv):
+		Marks_HistoryList=strconv.split(',')
+	else:
+		Marks_HistoryList=[strconv]
+
+	if (Marks_HistoryList[0]=='None'):
+		del Marks_HistoryList[0]
+	for row in listconv1:
 		print(row)
+	input("\n\nPRESS ENTER TO CONTINUE :")
+
 
 def adminint():
 	os.system('clear')
@@ -155,14 +177,29 @@ def adminint():
 def studentint():
 	os.system('clear')
 	s_name=input("Enter Your Name : ")
+	c.execute('SELECT Name FROM coaching')
+	data = c.fetchall()
+	NameList=list(chain.from_iterable(data))
+	while True:
+		if (NameList==[]):	
+			print("Please enroll as a student ")
+			quit()
+		elif s_name not in NameList:
+			s_name=input("You dont seem to be enrolled. Try again : ")
+		else:
+			break
 	os.system('clear')
-	func=int(input("Choose Any Number : \n\n(1) View Latest Marks\n(2) View Batch\n(3) View Performance History\n"))
 
 	while True:
-		if isinstance(func, int):
-			break
+		try:
+			func=int(input("Choose Any Number : \n\n(1) View Latest Marks\n(2) View Batch\n(3) View Performance History\n"))
+
+		except ValueError:
+			os.system('clear')
+			func=int(input("Choose Any Number : \n\n(1) View Latest Marks\n(2) View Batch\n(3) View Performance History\n"))
+
 		else:
-			func=int(input("Choose A Valid Number : \n\n(1) View Latest Marks\n(2) View Batch\n(3) View Performance History\n"))
+			break
 
 	os.system('clear')
 	if func == 1:

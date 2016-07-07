@@ -1,6 +1,7 @@
 import sys
 import os
 import sqlite3
+from itertools import chain
 
 #Connection and Cursor
 conn = sqlite3.connect('coaching.db')
@@ -14,18 +15,38 @@ def create_table():
 def marks_list_generate(s_name):
 	c.execute('SELECT Marks_History FROM coaching WHERE Name = ?',(s_name))
 	data=c.fetchall()
-	Marks_HistoryList=str(data).split()
+	Marks_HistoryList=list(chain.from_iterable(data))
+	if (Marks_HistoryList[0]==None):
+		del Marks_HistoryList[0]
 	return Marks_HistoryList
 
 def Total_Marks_generate():
 	c.execute('SELECT Marks_History FROM coaching')
 	data = c.fetchall()      
 	for i in range(1,len(data)+1):
-		c.execute('SELECT Marks_History FROM coaching WHERE rowid = ?',i)
+		c.execute('SELECT Marks_History FROM coaching WHERE rowid = ?',str(i))
 		data=c.fetchall()
-		Marks_HistoryList=str(data).split()
+		listconv1=list(chain.from_iterable(data)) 
+		strconv=str(listconv1[0])
+		
+ #CONVERT STRING TO LIST NOT TUPLE LIST TO LIST
+ #
+ #
+ #
+ #
+		
+
+		if(',' in strconv):
+			Marks_HistoryList=strconv.split(',')
+		else:
+			Marks_HistoryList=[strconv]
+
+		if (Marks_HistoryList[0]=='None'):
+			del Marks_HistoryList[0]
+
+		Marks_HistoryList = map(int, Marks_HistoryList)
 		total_marks=sum(Marks_HistoryList)
-		c.execute('UPDATE coaching SET Total_Marks = ? WHERE rowid = ?',(total_marks,i))   
+		c.execute('UPDATE coaching SET Total_Marks = ? WHERE rowid = ?',(total_marks,str(i)))   
 		conn.commit()
 
 def add_student():
@@ -33,13 +54,11 @@ def add_student():
 	c.execute("INSERT INTO coaching(Name) VALUES (?)",(s_name))
 	conn.commit()
 
-
 def update_marksheet():
 	s_name=input("Enter Student's Name : ")
 	c.execute('SELECT Name FROM coaching')
 	data = c.fetchall()
-	string_list = map(' '.join, data) 
-	NameList=str(''.join(string_list)).split()
+	NameList=list(chain.from_iterable(data))
 	while True:
 		if (NameList==[]):	
 			print("Please add a student first")
@@ -52,7 +71,11 @@ def update_marksheet():
 	s_marks=input("Enter Student's Latest Marks : ")
 	Marks_HistoryList=marks_list_generate(s_name)
 	Marks_HistoryList.append(s_marks)
-	s_marks_history = ' '.join(Marks_HistoryList)
+	if(len(Marks_HistoryList)>1):
+		s_marks_history = ','.join(Marks_HistoryList)
+	else:
+		s_marks_history = Marks_HistoryList[0]
+
 	c.execute('UPDATE coaching SET Marks_History = ? WHERE Name = ?',(s_marks_history, s_name))
 	conn.commit()
 	Total_Marks_generate()
@@ -107,17 +130,17 @@ def studentperf_view(s_name):
 
 def adminint():
 	os.system('clear')
-	# while True:
-	# 	try:
-	# 		func=int(input("Choose Any Number : \n\n(1) Add Student\n(2) View Database\n\n"))
+	while True:
+		try:
+			func=int(input("Choose Any Number : \n\n(1) Update Marksheet\n(2) View Database\n(3) Add Student\n\n"))
 
-	# 	except ValueError:
-	# 		func=int(input("Choose Any Number : \n\n(1) Add Student\n(2) View Database\n\n"))
+		except ValueError:
+			os.system('clear')
+			func=int(input("Choose A Proper Number : \n\n(1) Update Marksheet\n(2) View Database\n(3) Add Student\n\n"))
 
-	# 	else:
-	# 		break
+		else:
+			break
 
-	func=int(input("Choose Any Number : \n\n(1) Update Marksheet\n(2) View Database\n(3) Add Student\n\n"))
 	os.system('clear')
 	if func == 1:
 		update_marksheet()

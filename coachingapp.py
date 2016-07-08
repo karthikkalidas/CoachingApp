@@ -10,7 +10,7 @@ Marks_HistoryList=[]
 
 
 def create_table():
-	c.execute("CREATE TABLE IF NOT EXISTS coaching(Name TEXT, Batch TEXT, Marks_History TEXT, Total_Marks REAL, Rank REAL)")		
+	c.execute("CREATE TABLE IF NOT EXISTS coaching(Name TEXT,Password TEXT, Batch TEXT, Marks_History TEXT, Total_Marks REAL, Rank REAL)")		
 
 def marks_list_generate(s_name):
 	c.execute('SELECT Marks_History FROM coaching WHERE Name = ?',(s_name))
@@ -44,7 +44,8 @@ def Total_Marks_generate():
 
 def add_student():
 	s_name=input("Enter Student's Name : ")
-	c.execute("INSERT INTO coaching(Name) VALUES (?)",(s_name))
+	s_pass=input("Enter Student's Password : ")
+	c.execute("INSERT INTO coaching(Name, Password) VALUES (?,?)",(s_name,s_pass))
 	conn.commit()
 
 def update_marksheet():
@@ -174,7 +175,7 @@ def adminint():
 		print("Your option doesn't make sense to me")
 	os.system('clear')
 
-def studentint():
+def usrnamecheck():
 	os.system('clear')
 	s_name=input("Enter Your Name : ")
 	c.execute('SELECT Name FROM coaching')
@@ -188,6 +189,27 @@ def studentint():
 			s_name=input("You dont seem to be enrolled. Try again : ")
 		else:
 			break
+	return s_name
+
+def passcheck():
+	os.system('clear')
+	s_pass=input("Enter Your Password : ")
+	c.execute('SELECT Password FROM coaching')
+	data = c.fetchall()
+	NameList=list(chain.from_iterable(data))
+	while True:
+		if (NameList==[]):	
+			print("Please enroll as a student ")
+			quit()
+		elif s_pass not in NameList:
+			s_pass=input("Password is incorrect!. Try again : ")
+		else:
+			break
+	return s_pass
+
+def studentint():
+	s_name=usrnamecheck()
+	s_pass=passcheck()
 	os.system('clear')
 
 	while True:

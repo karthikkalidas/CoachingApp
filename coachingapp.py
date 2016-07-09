@@ -192,19 +192,19 @@ def usrnamecheck():
 	return s_name
 
 #Check for the student's password
-def passcheck():
+def passcheck(s_name):
 	os.system('clear')
 	s_pass=input("Enter Your Password : ")
-	c.execute('SELECT Password FROM coaching')
+	c.execute('SELECT Password FROM coaching WHERE Name = ?',s_name)
 	data = c.fetchall()
-	NameList=list(chain.from_iterable(data))
+	PassList=list(chain.from_iterable(data))
 
 	while True:
 
-		if (NameList==[]):	
+		if (PassList==[]):	
 			print("Please enroll as a student ")
 			quit()
-		elif s_pass not in NameList:
+		elif s_pass not in PassList:
 			s_pass=input("Password is incorrect!. Try again : ")
 		else:
 			break
@@ -288,7 +288,7 @@ if inp==1:
 
 elif inp==2:
 	s_name=usrnamecheck()
-	s_pass=passcheck()
+	s_pass=passcheck(s_name)
 
 	while True:
 		studentint()

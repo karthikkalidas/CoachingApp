@@ -1,4 +1,5 @@
 import sys
+import time
 import os
 import sqlite3
 from itertools import chain
@@ -7,6 +8,12 @@ from itertools import chain
 conn = sqlite3.connect('largecoaching.db')
 c = conn.cursor()
 Marks_HistoryList=[]
+testid=0
+
+#Admin starts a new test
+def New_Test():
+	global testid
+	testid+=1
 
 #Creates table where everything is stored
 def create_table():
@@ -112,8 +119,43 @@ def batch_generate():
 			c.execute('UPDATE largecoaching SET Batch = ? WHERE Rank = ?',(batch_letter,teacher_name,i))  
 			conn.commit()
 
-def set_reminder():
-	
+def reminder_check(t_name):
+	remcheck = 0
+	c.execute('SELECT Marks_History FROM largecoaching WHERE Teacher = ?',(t_name))
+	data=c.fetchall()
+	Marks_HistoryList=list(chain.from_iterable(data))
+
+	for i in range(0,len(Marks_HistoryList)):
+
+		if (Marks_HistoryList[0]==None):
+			del Marks_HistoryList[0]
+
+		try:
+			latest_marks=Marks_HistoryList[testid]
+		except ValueError:
+			remcheck=1
+		else:
+			break
+
+	return remcheck
+
+def reminder():
+	if(remcheck==1):
+		rem='REMINDER : UPDATE MARKSHEET'
+		print('\n\n')
+
+		for i in range(5)
+		    sys.stdout.write('\r'+rem)
+		    sys.stdout.flush()
+		    time.sleep(0.5)
+		    sys.stdout.write('\r'+' '*len(rem))
+		    sys.stdout.flush()
+		    time.sleep(0.5)
+
+		input("Press Enter to continue")
+
+
+
 
 def teacherbatch_view(t_name):
 	c.execute('SELECT Student, Rank FROM largecoaching WHERE Teacher = ?',t_name)
@@ -123,6 +165,36 @@ def teacherbatch_view(t_name):
 		print(row)
 
 	input("\n\nPRESS ENTER TO CONTINUE :")
+
+#Teacher uploads new marksheet
+def teacher_upload_marks(t_name):
+	c.execute('SELECT Student FROM largecoaching WHERE Teacher = ?',t_name)
+	data = c.fetchall()
+	NameList=list(chain.from_iterable(data))
+
+	while True:
+
+		if (NameList==[]):	
+			print("Please add a student first")
+			quit()
+		else:
+			break
+
+	for i in range(0,len(NameList)):
+
+		s_marks=input("Enter latest marks for Student : "+NameList[i])	
+		Marks_HistoryList=marks_list_generate(s_name)
+		Marks_HistoryList.append(s_marks)
+
+		if(len(Marks_HistoryList)>1):
+			s_marks_history = ','.join(Marks_HistoryList)
+		else:
+			s_marks_history = Marks_HistoryList[0]
+
+		c.execute('UPDATE largecoaching SET Marks_History = ? WHERE Student = ?',(s_marks_history, s_name))
+		conn.commit()
+
+	Total_Marks_generate()
 
 #Viewing the table
 def read_from_db():
@@ -325,6 +397,8 @@ def studentint():
 #TEACHER Interface
 def teacherint():
 	os.system('clear')
+	remcheck=reminder_check(t_name)
+	reminder()
 
 	while True:
 		
@@ -341,9 +415,9 @@ def teacherint():
 	os.system('clear')
 
 	if func == 1:
-		teacherbatch_view()
+		teacherbatch_view(t_name)
 	elif func == 2:
-		teacher_upload_marks()
+		teacher_upload_marks(t_name)
 	elif func==3:
 		quit()
 	else:

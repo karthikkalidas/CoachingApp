@@ -96,12 +96,7 @@ def remind_teachers():
 			listconv1=list(chain.from_iterable(data)) 
 			t_batch=str(listconv1[0])
 			c.execute("UPDATE teacher SET Reminder = ? WHERE Batch = ?",('1',t_batch))
-			conn.commit()
-
-
-
-# def remap_batches():
-	
+			conn.commit()	
 
 def new_test():
 	global testid
@@ -124,6 +119,23 @@ def add_student():
 	conn.commit()
 
 
+#Generating the Batch & Teacher Column. Batches of 3
+def remap_batches():
+	c.execute('SELECT Rank FROM coaching ORDER BY Total_Marks DESC')
+	data = c.fetchall()
+	batch_count=0
+
+	for i in range(1,len(data)+1):
+
+		if(i%3==1):
+			batch_count+=1
+			batch_letter=chr(ord('A')+batch_count-1)
+			teacher_name = input("Enter Teacher's Name for Batch: "+batch_letter)
+			c.execute('UPDATE coaching SET Batch = ?, Teacher = ? WHERE Rank = ?',(batch_letter,teacher_name,i))   
+			conn.commit()
+		else:
+			c.execute('UPDATE coaching SET Batch = ? WHERE Rank = ?',(batch_letter,teacher_name,i))  
+			conn.commit()
 
 
 
@@ -187,9 +199,10 @@ def s_usrnamecheck():
 		elif s_name not in NameList:
 			s_name=input("You dont seem to be enrolled. Try again : ")
 		else:
+			return s_name
 			break
 
-	return s_name
+
 
 #Check for the student's password
 def s_passcheck(s_name):
@@ -348,13 +361,27 @@ def t_passcheck(t_name):
 			break
 
 def teacherbatch_view(t_name):
-	c.execute('SELECT Student FROM largecoaching WHERE Teacher = ?',t_name)
+	c.execute('SELECT Batch FROM teacher WHERE Teacher = ?',t_name)
+	data=c.fetchall()
+	listconv1=list(chain.from_iterable(data)) 
+	t_batch=str(listconv1[0])
+	c.execute('SELECT Student FROM coaching WHERE Batch = ?',t_batch)
 	data = c.fetchall()
 
 	for row in data:
 		print(row)
 
 	input("\n\nPRESS ENTER TO CONTINUE :")
+
+#Generating a list of marks form Marks_History
+def marks_list_generate(s_name):
+	c.execute('SELECT Marks_History FROM coaching WHERE Student = ?',(s_name))
+	data=c.fetchall()
+	Marks_HistoryList=list(chain.from_iterable(data))
+
+	if (Marks_HistoryList[0]==None):
+		del Marks_HistoryList[0]
+	return Marks_HistoryList
 
 #Generating the Total_Marks Column
 def Total_Marks_generate():
@@ -378,6 +405,15 @@ def Total_Marks_generate():
 		Marks_HistoryList = map(int, Marks_HistoryList)
 		total_marks=sum(Marks_HistoryList)
 		c.execute('UPDATE coaching SET Total_Marks = ? WHERE rowid = ?',(total_marks,str(i)))   
+		conn.commit()
+
+#Generating the Rank Column on the basis of overall test marks
+def rank_generate():
+	c.execute('SELECT Total_Marks FROM coaching ORDER BY Total_Marks DESC')
+	data = c.fetchall()
+
+	for i in range(1,len(data)+1):
+		c.execute('UPDATE coaching SET Rank = ? WHERE Total_Marks = ?',(i,str(data[i-1][0])))   
 		conn.commit()
 
 #Teacher uploads new marksheet
@@ -413,19 +449,20 @@ def teacher_upload_marks(t_name):
 		conn.commit()
 
 	Total_Marks_generate()
+	rank_generate()
 
 def reminderint():
 	rem='REMINDER : UPDATE MARKSHEET'
 	os.system('clear')
 
-for i in range(3):
+	for i in range(3):
 
-    sys.stdout.write('\r'+rem)
-    sys.stdout.flush()
-    time.sleep(0.5)
-    sys.stdout.write('\r'+' '*len(rem))
-    sys.stdout.flush()
-    time.sleep(0.5)
+	    sys.stdout.write('\r'+rem)
+	    sys.stdout.flush()
+	    time.sleep(0.5)
+	    sys.stdout.write('\r'+' '*len(rem))
+	    sys.stdout.flush()
+	    time.sleep(0.5)
 
 
 def remcheck(t_name):
@@ -433,7 +470,7 @@ def remcheck(t_name):
 	data=c.fetchall()
 	listconv1=list(chain.from_iterable(data)) 
 	remcheck=str(listconv1[0])
-	if(remcheck=='1')
+	if(remcheck=='1'):
 		os.system('clear')
 		reminderint()
 

@@ -115,26 +115,27 @@ def add_teacher_batch():
 def add_student():
 	s_name=input("Enter Student's Name : ")
 	s_pass=input("Enter Student's Password : ")
-	c.execute("INSERT INTO coaching(Student, Student_Password) VALUES (?,?)",(s_name,s_pass))
+	c.execute('SELECT Student FROM coaching')
+	data = c.fetchall()
+	NameList=list(chain.from_iterable(data))
+	c.execute("INSERT INTO coaching(Student, Student_Password,Batch) VALUES (?,?,?)",(s_name,s_pass,input('Enter Batch of Student : ')))
 	conn.commit()
+
 
 
 #Generating the Batch & Teacher Column. Batches of 3
 def remap_batches():
 	c.execute('SELECT Rank FROM coaching ORDER BY Total_Marks DESC')
 	data = c.fetchall()
-	batch_count=0
 
 	for i in range(1,len(data)+1):
 
 		if(i%3==1):
-			batch_count+=1
-			batch_letter=chr(ord('A')+batch_count-1)
-			teacher_name = input("Enter Teacher's Name for Batch: "+batch_letter)
-			c.execute('UPDATE coaching SET Batch = ?, Teacher = ? WHERE Rank = ?',(batch_letter,teacher_name,i))   
+			batch=input('Enter Batch Name as per order : ')
+			c.execute('UPDATE coaching SET Batch = ? WHERE Rank = ?',(batch,i))  
 			conn.commit()
 		else:
-			c.execute('UPDATE coaching SET Batch = ? WHERE Rank = ?',(batch_letter,teacher_name,i))  
+			c.execute('UPDATE coaching SET Batch = ? WHERE Rank = ?',(batch,i))  
 			conn.commit()
 
 
@@ -198,6 +199,7 @@ def s_usrnamecheck():
 			quit()
 		elif s_name not in NameList:
 			s_name=input("You dont seem to be enrolled. Try again : ")
+			quit()
 		else:
 			return s_name
 			break
@@ -295,7 +297,6 @@ def studentperf_view(s_name):
 #TEACHER Interface
 def teacherint():
 	os.system('clear')
-	remcheck()
 
 	while True:
 		
@@ -337,6 +338,7 @@ def t_usrnamecheck():
 			quit()
 		elif t_name not in NameList:
 			t_name=input("You dont seem to be enrolled. Try again : ")
+			quit()
 		else:
 			break
 
@@ -367,8 +369,9 @@ def teacherbatch_view(t_name):
 	t_batch=str(listconv1[0])
 	c.execute('SELECT Student FROM coaching WHERE Batch = ?',t_batch)
 	data = c.fetchall()
+	listconv1=list(chain.from_iterable(data)) 
 
-	for row in data:
+	for row in listconv1:
 		print(row)
 
 	input("\n\nPRESS ENTER TO CONTINUE :")
@@ -435,8 +438,8 @@ def teacher_upload_marks(t_name):
 			break
 
 	for i in range(0,len(NameList)):
-
-		s_marks=input("Enter latest marks for Student : "+NameList[i])	
+		s_name=NameList[i]
+		s_marks=input("Enter Latest marks for Student "+s_name+" : ")	
 		Marks_HistoryList=marks_list_generate(s_name)
 		Marks_HistoryList.append(s_marks)
 
@@ -523,6 +526,7 @@ elif inp==3:
 	t_passcheck(t_name)
 
 	while True:
+		remcheck(t_name)
 		teacherint()
 
 elif inp==0:
